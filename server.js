@@ -39,7 +39,7 @@ app.get("/", async (req, res) => {
 app.post("/add", upload.single("jacket"), async (req, res, next) => {
   try {
     let newAlbum = new Album(req.body);
-    newAlbum.jacket = req.file.filename;
+    if (req.file) newAlbum.jacket = req.file.filename;
     await newAlbum.save();
     res.status(200).json(newAlbum);
   } catch (error) {
