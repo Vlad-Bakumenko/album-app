@@ -3,23 +3,48 @@ import mongoose from "mongoose";
 import Album from "./Model/Album.js";
 import cors from "cors";
 import multer from "multer";
-
-const storage = multer.diskStorage({
-  destination: (req, file, callback) => {
-    callback(null, "frontend/public/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
-  },
-  limits: { fileSize: 150000 }, // 150kb
-});
-
-const upload = multer({ storage: storage });
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+
+
+const __filename = fileURLToPath(import.meta.url); // absolute path to current file
+const __dirname = path.dirname(__filename); // dir name of current file
+
+// Serve our files statically from server side
+app.use(express.static(path.join(__dirname, "frontend/dist"))); // specify path for our frontend (deploy-starter/frontend/dist)
+
+
+let storage; 
+
+if (process.env.NODE_ENV === "development") {
+  storage = multer.diskStorage({
+    destination: (req, file, callback) => {
+      callback(null, "frontend/public/");
+    },
+    filename: (req, file, cb) => {
+      cb(null, file.originalname);
+    },
+    limits: { fileSize: 150000 }, // 150kb
+  });
+} else {
+  storage = multer.diskStorage({
+    destination: (req, file, callback) => {
+      callback(null, "frontend/dist/");
+    },
+    filename: (req, file, cb) => {
+      cb(null, file.originalname);
+    },
+    limits: { fileSize: 150000 }, // 150kb
+  });
+}
+
+const upload = multer({ storage: storage });
+
 
 //* Store your own MongoDB connection string in .env file!
 try {
@@ -31,7 +56,7 @@ try {
 }
 
 //* Default route
-app.get("/", async (req, res) => {
+app.get("/albums", async (req, res) => {
   const albums = await Album.find();
   res.status(200).json(albums);
 });
@@ -68,6 +93,10 @@ app.patch("/update/:id", upload.single("jacket"), async (req, res, next) => {
   }
 });
 
+app.get("*", (req,res) => {
+  res.sendFile(__dirname + "/frontend/dist/assets/index.html");
+})
+
 //* Global Error Handling
 app.use(function errorHandler(err, req, res, next) {
   console.log("error handler is running...");
@@ -79,6 +108,8 @@ app.use(function errorHandler(err, req, res, next) {
   });
 });
 
-app.listen(3002, () => {
-  console.log("Server is listening to port 3002");
+const port = process.env.PORT || 3001;
+
+app.listen(port, () => {
+  console.log(`Server is listening to port ${port}`);
 });
