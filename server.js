@@ -5,6 +5,7 @@ import cors from "cors";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
+import { verifyCaptcha } from "./middleware/verifyCaptcha.js";
 
 const app = express();
 
@@ -61,7 +62,7 @@ app.get("/albums", async (req, res) => {
   res.status(200).json(albums);
 });
 
-app.post("/add", upload.single("jacket"), async (req, res, next) => {
+app.post("/add", upload.single("jacket"), verifyCaptcha, async (req, res, next) => {
   try {
     let newAlbum = new Album(req.body);
     if (req.file) newAlbum.jacket = req.file.filename;
