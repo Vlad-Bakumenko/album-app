@@ -8,9 +8,7 @@ function App() {
   const [albums, setAlbums] = useState([]);
   const [album, setAlbum] = useState([]);
 
-  const fileInput = useRef(null); // 1. this will hold a reference to our file input!
-
-  // recaptcha ref variable
+  const fileInput = useRef(null);
   const recaptcha = useRef(null);
 
   useEffect(() => {
@@ -34,7 +32,7 @@ function App() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    const captcha = recaptcha.current.getValue()
+    const captcha = recaptcha.current.getValue();
 
     const formData = new FormData();
     formData.append("title", inputs.title);
@@ -44,31 +42,30 @@ function App() {
     formData.append("captcha", captcha);
 
     setInputs({});
-    fileInput.current.value = ""; // 3. this resets the file input value :)
+    fileInput.current.value = "";
 
-    
     try {
       const response = await fetch(`${import.meta.env.VITE_API}/add`, {
         method: "POST",
         body: formData,
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log(data);
         setAlbum(data);
         alert(`added!`);
-        recaptcha.current.reset();
       } else {
-        const {error} = await response.json();
-        alert(error.message)
+        const { error } = await response.json();
+        alert(error.message);
       }
     } catch (error) {
       console.log(error);
       alert(error.message);
     }
+    
+    recaptcha.current.reset();
   }
-
 
   return (
     <>
@@ -97,24 +94,31 @@ function App() {
         />
         <input
           type="file"
-          ref={fileInput} // 2. this sets the reference to file input
+          ref={fileInput}
           onChange={(e) => setInputs({ ...inputs, jacket: e.target.files[0] })}
           accept="image/*"
         />
-        <ReCAPTCHA sitekey={import.meta.env.VITE_SITE_RECAPTCHA} ref={recaptcha}/>
+        <div className="recaptcha">
+          <ReCAPTCHA
+            sitekey={import.meta.env.VITE_SITE_RECAPTCHA}
+            ref={recaptcha}
+          />
+        </div>
         <button>Add</button>
       </form>
-      {!!albums.length &&
-        albums.map(album => (
-          <Album
-            key={album._id}
-            album={album}
-            getAlbums={getAlbums}
-            inputs={inputs}
-            setInputs={setInputs}
-            setAlbum={setAlbum}
-          />
-        ))}
+      <div className="albums">
+        {!!albums.length &&
+          albums.map((album) => (
+            <Album
+              key={album._id}
+              album={album}
+              getAlbums={getAlbums}
+              inputs={inputs}
+              setInputs={setInputs}
+              setAlbum={setAlbum}
+            />
+          ))}
+      </div>
     </>
   );
 }
